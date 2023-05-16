@@ -14,7 +14,7 @@ base_orders as (
 
 ),
 
-payments as (
+base_payments as (
 
     select * from {{ source('stripe', 'payment') }}
 
