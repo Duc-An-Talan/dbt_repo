@@ -24,10 +24,10 @@ payments as (
 customers as (
 
     select 
-        customers.id as customer_id,
+        id as customer_id, --customers.
         --customers.name as full_name,
-        customers.last_name as surname,
-        customers.first_name as givenname,
+        last_name as surname, --customers.
+        first_name as givenname, --customers.
         first_name || ' ' || last_name as full_name, 
         * 
 
@@ -66,10 +66,10 @@ customer_order_history as (
 
     select 
 
-        customers.id as customer_id,
-        customers.name as full_name,
-        customers.last_name as surname,
-        customers.first_name as givenname,
+        customers.customer_id,
+        customers.full_name,
+        customers.surname,
+        customers.givenname,
 
         min(order_date) as first_order_date,
 
