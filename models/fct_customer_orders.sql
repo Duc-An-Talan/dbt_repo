@@ -80,7 +80,7 @@ payments as (
 
 --marts
 -- customer_order_history en final
-final as (
+customer_orders as (
 
     select 
 
@@ -94,20 +94,20 @@ final as (
 
         min(orders.order_date) over(
             partition by orders.customer_id
-        ) as first_order_date,
+        ) as customer_first_order_date,
 
         min(valid_order_date) over(
             partition by orders.customer_id
-        ) as first_non_returned_order_date,
+        ) as customer_first_non_returned_order_date,
 
         max(valid_order_date) over(
             partition by orders.customer_id
-        ) as most_recent_non_returned_order_date,
+        ) as customer_most_recent_non_returned_order_date,
 
         --coalesce(max(user_order_seq),0) 
         count(*) over(
             partition by orders.customer_id
-        ) as order_count,
+        ) as customer_order_count,
 
         /*coalesce(count(case 
             when orders.order_status != 'returned' 
@@ -118,16 +118,14 @@ final as (
         sum(nvl2(orders.valid_order_date, 1, 0)) over(
             partition by orders.customer_id
         ) 
-         as non_returned_order_count,
+         as customer_non_returned_order_count,
         -- nvl2 si null premiere ici amount group by customer_id
         /*sum(case 
             when orders.order_status not in ('returned','return_pending') 
             then payments.payment_amount 
             else 0 
         end)*/
-        sum(nvl2(orders.valid_order_date, orders.order_value_dollars, 0)) over(
-            partition by orders.customer_id
-        ) as total_lifetime_value,
+
 
         /*sum(case 
             when orders.order_status not in ('returned','return_pending') 
@@ -139,10 +137,14 @@ final as (
             then 1 end),
             0
         )*/
+
+        sum(nvl2(orders.valid_order_date, orders.order_value_dollars, 0)) over(
+            partition by orders.customer_id
+            ) as customer_total_lifetime_value,
         --montant moyen des objets non retourné
         --total_lifetime_value/non_returned_order_count
         -- as avg_non_returned_order_value,
-        
+
         --donne la liste des orders_id par client
         array_agg(distinct orders.order_id) over(
             partition by orders.customer_id
@@ -160,8 +162,34 @@ final as (
 
     --group by customers.customer_id, customers.full_name, customers.surname, customers.givenname
 
+),
+
+--Une CTE intermediaire pour calculer avg_non_returned_value
+add_avg_order_values as (
+
+  select
+    *,
+    customer_total_lifetime_value / customer_non_returned_order_count 
+    as customer_avg_non_returned_order_value
+
+  from customer_orders
+),
+
+final as (
+
+    select 
+    order_id,
+    customer_id,
+    surname,
+    givenname,
+    customer_first_order_date as first_order_date,
+    customer_order_count as order_count,
+    customer_total_lifetime_value as total_lifetime_value,
+    order_value_dollars,
+    order_status,
+    payment_status
+    from add_avg_order_values
 )
---,
 
 -- final CTE
 /*final as (
