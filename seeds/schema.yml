@@ -1,0 +1,14 @@
+version: 2
+
+seeds:
+  - name: employees
+    description: fichier source des employees implémentation manuel
+    columns: 
+    - name: employee_id
+      description: clé primaire d'un employée
+      tests:
+        - unique
+        - not_null
+            
+          
+  
