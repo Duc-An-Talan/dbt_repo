@@ -165,7 +165,7 @@ final as (
     left outer join payments
     on orders.order_id = payments.order_id
 
-    where payments.status != 'fail'
+    where payments.payment_status != 'fail'
 
 )
 
