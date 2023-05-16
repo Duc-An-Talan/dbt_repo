@@ -16,4 +16,4 @@
 select * from analytics.{{target.schema}}.mock_orders
 
 {% endsnapshot %}
-{#dbt run snapshot#}
+{#dbt snapshot#}
