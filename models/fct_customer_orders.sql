@@ -2,26 +2,27 @@
 with
 -- import CTEs
 
-base_customers as (
+--base_customers 
+customers as (
 
-    select * from {{ source('jaffle_shop', 'customers') }}
-
-),
-
-base_orders as (
-
-    select * from {{ source('jaffle_shop', 'orders') }}
+    select * from {{ ref('stg_jaffle_shop__customers') }}
 
 ),
 
-base_payments as (
+orders as (
 
-    select * from {{ source('stripe', 'payment') }}
+    select * from {{ ref('stg_jaffle_shop__orders') }} --{{ source('jaffle_shop', 'orders') }}
+
+),
+
+payments as (
+
+    select * from  {{ ref('stg_stripe__payments') }} --{{ source('stripe', 'payment') }}
 
 ),
 -- logical CTEs
 --staging
-customers as (
+/*customers as (
 
     select 
         id as customer_id, --customers.
@@ -145,8 +146,8 @@ final as (
 
         orders.order_id,
         orders.customer_id,
-        last_name as surname,
-        first_name as givenname,
+        customers.surname,
+        customers.givenname,
         first_order_date,
         order_count,
         total_lifetime_value,
