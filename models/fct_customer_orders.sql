@@ -120,7 +120,7 @@ customer_order_history as (
 
     where a.status not in ('pending') and c.status != 'fail'
 
-    group by customers.id, customers.name, customers.last_name, customers.first_name
+    group by customers.customer_id, customers.full_name, customers.surname, customers.givenname
 
 ),
 
