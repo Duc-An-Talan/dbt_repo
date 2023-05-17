@@ -4,18 +4,18 @@ with
 -- 2 First CTE 
 orders as(
 
-    select * from {{ source('jaffle_shop', 'orders') }}
+    select * from {{ ref('stg_jaffle_shop__orders_v2') }}
 
 ),
 
 payments as (
 
-    select * from {{ source('stripe', 'payment') }}
+    select * from {{ ref('stg_stripe__payments_v2') }}
 ),
 
 customers as (
 
-    select * from {{ source('jaffle_shop', 'customers') }}
+    select * from {{ ref('stg_jaffle_shop__customers_v2') }}
 
 ),
 --Staging
@@ -23,27 +23,28 @@ customers as (
 completed_payments as (
 
     select 
-        orderid as order_id,
-        max(created) as payment_finalized_date,
-        sum(amount) / 100.0 as total_amount_paid
+        order_id,
+        max(payment_created_at) as payment_finalized_date,
+        sum(payment_amount)  as total_amount_paid
     from payments
-    where status <> 'fail'
+    where payment_status <> 'fail'
     group by 1
 
 ),
 
 paid_orders as (
-        select orders.id as order_id,
-            orders.user_id as customer_id,
-            orders.order_date as order_placed_at,
-            orders.status as order_status,
+        select orders.order_id,
+            orders.customer_id,
+            orders.order_placed_at,
+            orders.order_status,
             p.total_amount_paid,
             p.payment_finalized_date,
             c.first_name as customer_first_name,
             c.last_name as customer_last_name
         from  orders
             left join completed_payments as p on orders.id = p.order_id
-    left join customers as c on orders.user_id = c.id ),
+    left join customers as c on orders.user_id = c.id
+     ),
 
 customer_orders as (
     select 
@@ -72,8 +73,14 @@ final as (
 
 select
     p.*,
+
+    --sale transaction sequence
     row_number() over (order by p.order_id) as transaction_seq,
+
+    -- numéro sequence du clients
     row_number() over (partition by customer_id order by p.order_id) as customer_sales_seq,
+
+    --new vs return
     case when c.first_order_date = p.order_placed_at
     then 'new'
     else 'return' end as nvsr,
