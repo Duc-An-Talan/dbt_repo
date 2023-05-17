@@ -18,6 +18,7 @@ customers as (
     select * from {{ source('jaffle_shop', 'customers') }}
 
 ),
+--Staging
 
 paid_orders as (
         select orders.id as order_id,
