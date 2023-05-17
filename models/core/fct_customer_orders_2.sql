@@ -54,14 +54,8 @@ final as (
             -- first day of sale
          first_value(paid_orders.order_placed_at) over (partition by paid_orders.customer_id
         order by paid_orders.order_placed_at
-        ) as first_order_date,
+        ) as fdos
 
-        last_value(paid_orders.order_placed_at) over (partition by paid_orders.customer_id
-        order by paid_orders.order_placed_at
-        ) as most_recent_order_date,
-
-        count(paid_orders.order_id) over ( partition by paid_orders.customer_id
-        ) as number_of_orders
     from paid_orders 
     left join customers as c on paid_orders.customer_id = c.customer_id 
     
