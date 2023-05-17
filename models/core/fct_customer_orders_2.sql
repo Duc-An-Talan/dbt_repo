@@ -2,16 +2,6 @@
 with 
 
 -- 2 First CTE 
-orders as(
-
-    select * from {{ ref('stg_jaffle_shop__orders_v2') }}
-
-),
-
-payments as (
-
-    select * from {{ ref('stg_stripe__payments_v2') }}
-),
 
 customers as (
 
@@ -20,40 +10,26 @@ customers as (
 ),
 --Staging
 
-completed_payments as (
 
-    select 
-        order_id,
-        max(payment_created_at) as payment_finalized_date,
-        sum(payment_amount)  as total_amount_paid
-    from payments
-    where payment_status <> 'fail'
-    group by 1
-
-),
 
 paid_orders as (
-        select orders.order_id,
-            orders.customer_id,
-            orders.order_placed_at,
-            orders.order_status,
-            p.total_amount_paid,
-            p.payment_finalized_date,
-            c.first_name as customer_first_name,
-            c.last_name as customer_last_name
-        from  orders
-            left join completed_payments as p on orders.id = p.order_id
-    left join customers as c on orders.user_id = c.id
+        
+        select * from  {{ ref('int_orders_v2') }}
+            --c.first_name as customer_first_name,
+            --c.last_name as customer_last_name
+        
+        --orders  left join completed_payments as p on orders.id = p.order_id
+    --left join customers as c on orders.user_id = c.id
      ),
 
 customer_orders as (
     select 
-        c.id as customer_id
-        , min(order_date) as first_order_date
-        , max(order_date) as most_recent_order_date
+        c.customer_id
+        , min(order_placed_at) as first_order_date
+        , max(order_placed_at) as most_recent_order_date
         , count(orders.id) as number_of_orders
     from customers as c 
-    left join orders on orders.user_id = c.id 
+    left join paid_orders on paid_orders.customer_id = c.customer_id 
     group by 1
 ),
 
