@@ -20,7 +20,7 @@ customers as (
 ),
 --Staging
 
-p as (
+completed_payments as (
 
     select 
         orderid as order_id,
@@ -42,7 +42,7 @@ paid_orders as (
             c.first_name as customer_first_name,
             c.last_name as customer_last_name
         from  orders
-            left join p on orders.id = p.order_id
+            left join completed_payments as p on orders.id = p.order_id
     left join customers as c on orders.user_id = c.id ),
 
 customer_orders as (
